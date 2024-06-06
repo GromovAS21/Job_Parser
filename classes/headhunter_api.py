@@ -1,9 +1,11 @@
+from typing import Any
+
 import requests
 
 
-def get_employers_and_vacancies_info(employers_id: list) -> list[dict]:
+def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, Any]]:
     """
-    Загрузка информации об организациях из HeadHunter'а
+    Загрузка информации об организациях и имеющихся у них вакансий из HeadHunter'а
     :param employers_id: ID организации
     :return: список с организациями и их вакансиями
     """
@@ -22,7 +24,7 @@ def get_employers_and_vacancies_info(employers_id: list) -> list[dict]:
 
         vacancies_list = []
         params = {'text': '', 'page': 0, 'per_page': '100', 'employer_id': employer_id}
-        while params['page'] != 1:
+        while params['page'] != 1:  # Изменяемый параметр, в зависимости от объема выводимых вакансий
             response_2 = requests.get(f'https://api.hh.ru/vacancies', params=params)
             vacancies = response_2.json()['items']
             for vacancy in vacancies:
