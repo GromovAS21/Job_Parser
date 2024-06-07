@@ -1,6 +1,4 @@
-from pprint import pprint
-
-from classes.functions import get_employers_and_vacancies_info, create_database, save_data_in_database
+from functions import get_employers_and_vacancies_info, create_database, save_data_in_database
 from config import config
 
 
