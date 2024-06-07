@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import Any
 import psycopg2
 import requests
