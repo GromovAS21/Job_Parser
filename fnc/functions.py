@@ -35,7 +35,8 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
                     'employment': vacancy.get('employment').get('name'),
                     'schedule': vacancy.get('schedule').get('name'),
                     'type': vacancy.get('type').get('name'),
-                    'area': vacancy.get('area').get('name')
+                    'area': vacancy.get('area').get('name'),
+                    'alternate_url': vacancy.get('alternate_url')
                 }
                 if vacancy['salary'] is None or vacancy['salary']['from'] is None:
                     vacancy_info['salary'] = None
@@ -87,9 +88,10 @@ def create_database(database_name: str, params: dict) -> None:
                 id_employer INT REFERENCES employers(id_employer),
                 vacancy_name VARCHAR(255) NOT NULL,
                 salary INT,
-                currency varchar(5),
+                currency VARCHAR(10),
                 published_at DATE,
                 employment VARCHAR(50),
+                url_vacancy VARCHAR,
                 schedule VARCHAR(50),
                 type VARCHAR(50),
                 area VARCHAR(50)
@@ -118,10 +120,10 @@ def save_data_in_database(database_name: str, params: dict, data: list[dict[str,
 
                 for vacancy in vacancies:
                     cur.execute('''
-                    INSERT INTO vacancies (id_vacancy, id_employer, vacancy_name, salary, currency, published_at, employment, schedule, type, area) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                    INSERT INTO vacancies (id_vacancy, id_employer, vacancy_name, salary, currency, published_at, employment, url_vacancy, schedule, type, area) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                                 (vacancy['id'], employer['id'], vacancy['vacancy'], vacancy['salary'],
-                                 vacancy['currency'], vacancy['published_at'], vacancy['employment'],
+                                 vacancy['currency'], vacancy['published_at'], vacancy['employment'], vacancy['alternate_url'],
                                  vacancy['schedule'], vacancy['type'], vacancy['area']))
     conn.close()
 
