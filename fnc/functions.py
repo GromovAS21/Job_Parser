@@ -9,7 +9,9 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
     :param employers_id: ID организации
     :return: список с организациями и их вакансиями
     """
+    page_indicator = 0  # Индикатор для подсчета процентов выполнения загрузки
     data = []
+    print('\nПодождите идет загрузка данных...')
     for employer_id in employers_id:
         response_1 = requests.get(f'https://api.hh.ru/employers/{employer_id}')
         employer = response_1.json()
@@ -24,7 +26,8 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
 
         vacancies_list = []
         params = {'text': '', 'page': 0, 'per_page': '100', 'employer_id': employer_id}
-        while params['page'] != 1:  # Изменяемый параметр, в зависимости от объема выводимых вакансий
+        indicator = 3  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий
+        while params['page'] != indicator:
             response_2 = requests.get(f'https://api.hh.ru/vacancies', params=params)
             vacancies = response_2.json()['items']
             for vacancy in vacancies:
@@ -46,6 +49,8 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
                     vacancy_info['currency'] = vacancy['salary']['currency']
                 vacancies_list.append(vacancy_info)
             params['page'] += 1
+            page_indicator += 1
+            print(f'Загружено {round(page_indicator * 100 / (indicator * len(employers_id)), 1)} % данных.')
         data.append({
             'employer': employer_info,
             'vacancies': vacancies_list
@@ -64,7 +69,9 @@ def create_database(database_name: str, params: dict) -> None:
     with conn.cursor() as cur:
         cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
         cur.execute(f'CREATE DATABASE {database_name}')
+    print(f"База данных {database_name} создана!")
     conn.close()
+
 
     with psycopg2.connect(dbname=database_name, **params) as conn:
         with conn.cursor() as cur:
@@ -78,7 +85,9 @@ def create_database(database_name: str, params: dict) -> None:
                 open_vacancies INT
                 );
             ''')
+    print('Таблица employers создана!')
     conn.close()
+
 
     with psycopg2.connect(dbname=database_name, **params) as conn:
         with conn.cursor() as cur:
@@ -97,10 +106,12 @@ def create_database(database_name: str, params: dict) -> None:
                 area VARCHAR(50)
                 );
             ''')
+    print('Таблица vacancies создана!')
     conn.close()
 
 
-def save_data_in_database(database_name: str, params: dict, data: list[dict[str, Any]] ) -> None:
+
+def save_data_in_database(database_name: str, params: dict, data: list[dict[str, Any]]) -> None:
     """
     Добавление информации в базу данных
     :param database_name: название подключаемой базы данных
@@ -125,7 +136,9 @@ def save_data_in_database(database_name: str, params: dict, data: list[dict[str,
                                 (vacancy['id'], employer['id'], vacancy['vacancy'], vacancy['salary'],
                                  vacancy['currency'], vacancy['published_at'], vacancy['employment'], vacancy['alternate_url'],
                                  vacancy['schedule'], vacancy['type'], vacancy['area']))
+    print('Данные добавлены в базу данных!')
     conn.close()
+
 
 
 
