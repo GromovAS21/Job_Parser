@@ -16,7 +16,6 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
         response_1 = requests.get(f'https://api.hh.ru/employers/{employer_id}')
         employer = response_1.json()
         employer_info = {
-            'id': employer.get('id'),
             'name': employer.get('name'),
             'area': employer.get('area').get('name'),
             'alternate_url': employer.get('alternate_url'),
@@ -26,13 +25,12 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
 
         vacancies_list = []
         params = {'text': '', 'page': 0, 'per_page': '100', 'employer_id': employer_id}
-        indicator = 1  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий
+        indicator = 1  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий (до 20!!!)
         while params['page'] != indicator:
             response_2 = requests.get(f'https://api.hh.ru/vacancies', params=params)
             vacancies = response_2.json()['items']
             for vacancy in vacancies:
                 vacancy_info = {
-                    'id': vacancy.get('id'),
                     'vacancy': vacancy.get('name'),
                     'published_at': vacancy.get('published_at'),
                     'employment': vacancy.get('employment').get('name'),
@@ -50,7 +48,7 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
                 vacancies_list.append(vacancy_info)
             params['page'] += 1
             page_indicator += 1
-            print(f'Загружено {round(page_indicator * 100 / (indicator * len(employers_id)), 1)} % данных.')
+            print(f'Загружено {round(page_indicator * 100 / (indicator * len(employers_id)), 1)} % данных')
         data.append({
             'employer': employer_info,
             'vacancies': vacancies_list
@@ -80,11 +78,11 @@ def create_database(database_name: str, params: dict) -> None:
         with conn.cursor() as cur:
             cur.execute('''
             CREATE TABLE employers (
-                id_employer INT UNIQUE PRIMARY KEY,
-                employer_name VARCHAR(50) NOT NULL,
+                id_employer SERIAL PRIMARY KEY,
+                employer_name VARCHAR(255) NOT NULL,
                 area VARCHAR(50),
-                employer_page VARCHAR(100),
-                employer_website VARCHAR(100),
+                employer_page VARCHAR(255),
+                employer_website VARCHAR(255),
                 open_vacancies INT
                 );
             ''')
@@ -96,17 +94,17 @@ def create_database(database_name: str, params: dict) -> None:
         with conn.cursor() as cur:
             cur.execute('''
             CREATE TABLE vacancies (
-                id_vacancy INT UNIQUE PRIMARY KEY,
+                id_vacancy SERIAL PRIMARY KEY,
                 id_employer INT REFERENCES employers(id_employer),
                 vacancy_name VARCHAR(255) NOT NULL,
                 salary INT,
-                currency VARCHAR(10),
+                currency VARCHAR(255),
                 published_at DATE,
-                employment VARCHAR(50),
+                employment VARCHAR(255),
                 url_vacancy VARCHAR,
-                schedule VARCHAR(50),
-                type VARCHAR(50),
-                area VARCHAR(50)
+                schedule VARCHAR(255),
+                type VARCHAR(255),
+                area VARCHAR(255)
                 );
             ''')
     print('Таблица vacancies создана!')
@@ -126,16 +124,20 @@ def save_data_in_database(database_name: str, params: dict, data: list[dict[str,
                 employer = value['employer']
                 vacancies = value['vacancies']
                 cur.execute('''
-                INSERT INTO employers (id_employer, employer_name, area, employer_page, employer_website, open_vacancies) 
-                VALUES (%s, %s, %s, %s, %s, %s)''',
-                            (employer['id'], employer['name'], employer['area'], employer['alternate_url'],
+                INSERT INTO employers (employer_name, area, employer_page, employer_website, open_vacancies) 
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id_employer''',
+                            (employer['name'], employer['area'], employer['alternate_url'],
                              employer['site_url'], employer['open_vacancies']))
+
+                id_employer = cur.fetchone()[0]
 
                 for vacancy in vacancies:
                     cur.execute('''
-                    INSERT INTO vacancies (id_vacancy, id_employer, vacancy_name, salary, currency, published_at, employment, url_vacancy, schedule, type, area) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-                                (vacancy['id'], employer['id'], vacancy['vacancy'], vacancy['salary'],
+                    INSERT INTO vacancies (id_employer, vacancy_name, salary, currency, published_at, employment, url_vacancy, schedule, type, area) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id_vacancy''',
+                                (id_employer, vacancy['vacancy'], vacancy['salary'],
                                  vacancy['currency'], vacancy['published_at'], vacancy['employment'], vacancy['alternate_url'],
                                  vacancy['schedule'], vacancy['type'], vacancy['area']))
     print('Данные добавлены в базу данных!')

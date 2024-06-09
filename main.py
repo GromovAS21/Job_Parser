@@ -17,10 +17,10 @@ def main():
 
     # Код для проверки работоспособности методов класса
     # db_manager = DB_Manager(db_name, params)
-    # # db_manager.get_companies_and_vacancies_count()
-    # # db_manager.get_all_vacancies()
-    # # db_manager.get_avg_salary()
-    # # db_manager.get_vacancies_with_higher_salary()
+    # db_manager.get_companies_and_vacancies_count()
+    # db_manager.get_all_vacancies()
+    # db_manager.get_avg_salary()
+    # db_manager.get_vacancies_with_higher_salary()
     # keyword = input("Введите слово: ")
     # db_manager.get_vacancies_with_keyword(keyword)
 
