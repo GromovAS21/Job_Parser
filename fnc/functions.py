@@ -25,7 +25,7 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
 
         vacancies_list = []
         params = {'text': '', 'page': 0, 'per_page': '100', 'employer_id': employer_id}
-        indicator = 1  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий (до 20!!!)
+        indicator = 7  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий (до 20!!!)
         while params['page'] != indicator:
             response_2 = requests.get(f'https://api.hh.ru/vacancies', params=params)
             vacancies = response_2.json()['items']
