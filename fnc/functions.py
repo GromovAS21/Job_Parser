@@ -26,7 +26,7 @@ def get_employers_and_vacancies_info(employers_id: list[int]) -> list[dict[str, 
 
         vacancies_list = []
         params = {'text': '', 'page': 0, 'per_page': '100', 'employer_id': employer_id}
-        indicator = 3  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий
+        indicator = 1  # Изменяемый параметр, в зависимости от нужного объема выводимых вакансий
         while params['page'] != indicator:
             response_2 = requests.get(f'https://api.hh.ru/vacancies', params=params)
             vacancies = response_2.json()['items']
@@ -67,6 +67,9 @@ def create_database(database_name: str, params: dict) -> None:
     conn = psycopg2.connect(dbname='postgres', **params)
     conn.autocommit = True
     with conn.cursor() as cur:
+        cur.execute(f'''SELECT pg_terminate_backend(pg_stat_activity.pid)
+                    FROM pg_stat_activity
+                    WHERE pg_stat_activity.datname = '{database_name}' AND pid <> pg_backend_pid()''')
         cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
         cur.execute(f'CREATE DATABASE {database_name}')
     print(f"База данных {database_name} создана!")
@@ -108,7 +111,6 @@ def create_database(database_name: str, params: dict) -> None:
             ''')
     print('Таблица vacancies создана!')
     conn.close()
-
 
 
 def save_data_in_database(database_name: str, params: dict, data: list[dict[str, Any]]) -> None:
